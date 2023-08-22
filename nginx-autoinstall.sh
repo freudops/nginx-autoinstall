@@ -8,7 +8,7 @@ fi
 
 # Define versions
 NGINX_MAINLINE_VER=${NGINX_MAINLINE_VER:-1.21.6}
-NGINX_STABLE_VER=${NGINX_STABLE_VER:-1.22.0}
+NGINX_STABLE_VER=${NGINX_STABLE_VER:-1.25.2}
 LIBRESSL_VER=${LIBRESSL_VER:-3.3.1}
 OPENSSL_VER=${OPENSSL_VER:-1.1.1l}
 NPS_VER=${NPS_VER:-1.13.35.2}
@@ -136,7 +136,7 @@ case $OPTION in
 		echo ""
 		echo "Modules to install :"
 		while [[ $HTTP3 != "y" && $HTTP3 != "n" ]]; do
-			read -rp "       HTTP/3 (⚠️ Patch by Cloudflare, will install BoringSSL, Quiche, Rust and Go) [y/n]: " -e -i n HTTP3
+			read -rp "       HTTP/3 (HTTP3 Supported by nginx 1.25.2) [y/n]: " -e -i n HTTP3
 		done
 		while [[ $TLSDYN != "y" && $TLSDYN != "n" ]]; do
 			read -rp "       Cloudflare's TLS Dynamic Record Resizing patch [y/n]: " -e -i n TLSDYN
@@ -667,22 +667,6 @@ case $OPTION in
 
 	# HTTP3
 	if [[ $HTTP3 == 'y' ]]; then
-		cd /usr/local/src/nginx/modules || exit 1
-		git clone --depth 1 --recursive https://github.com/cloudflare/quiche
-		# Dependencies for BoringSSL and Quiche
-		apt-get install -y golang
-		# Rust is not packaged so that's the only way...
-		curl -sSf https://sh.rustup.rs | sh -s -- -y
-		source "$HOME/.cargo/env"
-
-		cd /usr/local/src/nginx/nginx-${NGINX_VER} || exit 1
-		# Apply actual patch
-		patch -p01 </usr/local/src/nginx/modules/quiche/nginx/nginx-1.16.patch
-
-		# Apply patch for nginx > 1.19.7 (source: https://github.com/cloudflare/quiche/issues/936#issuecomment-857618081)
-		wget https://raw.githubusercontent.com/angristan/nginx-autoinstall/master/patches/nginx-http3-1.19.7.patch -O nginx-http3.patch
-		patch -p01 <nginx-http3.patch
-
 		NGINX_OPTIONS=$(
 			echo "$NGINX_OPTIONS"
 			echo --with-openssl=/usr/local/src/nginx/modules/quiche/quiche/deps/boringssl --with-quiche=/usr/local/src/nginx/modules/quiche
