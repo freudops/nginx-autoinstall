@@ -667,6 +667,9 @@ case $OPTION in
 
 	# HTTP3
 	if [[ $HTTP3 == 'y' ]]; then
+ 		cd /usr/local/src/nginx/modules || exit 1
+		git clone --depth 1 --recursive https://github.com/cloudflare/quiche
+  
 		NGINX_OPTIONS=$(
 			echo "$NGINX_OPTIONS"
 			echo --with-openssl=/usr/local/src/nginx/modules/quiche/quiche/deps/boringssl --with-quiche=/usr/local/src/nginx/modules/quiche
